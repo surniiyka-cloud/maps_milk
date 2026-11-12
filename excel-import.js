@@ -74,7 +74,7 @@ const choice=$("importDebtSelect").value;const debtors=choice===""?null:parsed.t
 if(!Object.keys(changes).length&&!debtors?.length)throw Error("Выберите хотя бы один показатель или реестр задолженности.");
 const period=$("importPeriod").value,old=saved(),base=old?.data||{};
 const nextData={...base,...changes};if(debtors)nextData.debtors=debtors;
-const next={...store,[recordKey(currentOffice,period)]:{data:nextData,savedAt:new Date().toISOString(),sourceFile:fileInfo.name,sourceSheets:parsed.sheets}};
+const next={...store,[recordKey(currentOffice,period)]:{data:nextData,savedAt:new Date().toISOString(),reportType:$("importReportType").value,sourceFile:fileInfo.name,sourceSheets:parsed.sheets}};
 localStorage.setItem(STORE,JSON.stringify(next));store=next;syncOffice();updateOffice();
 msg("✓ Импорт сохранён локально: "+Object.keys(changes).length+" показателей"+(debtors?" и "+debtors.length+" контрагентов":"")+". Другие сотрудники пока не увидят данные.");
 $("importStatus").textContent="Сохранено. Не забудьте сделать резервную копию. Сведения не отправлялись на сервер.";
@@ -82,7 +82,7 @@ $("importStatus").textContent="Сохранено. Не забудьте сде�
 function backup(){const obj={version:2,office:currentOffice,createdAt:new Date().toISOString(),records:Object.fromEntries(Object.entries(store).filter(([k])=>k.startsWith(currentOffice+"|")))};const blob=new Blob([JSON.stringify(obj,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="tian-"+currentOffice.replace(/\s/g,"-")+"-imports.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 $("excelInput").addEventListener("change",e=>{fileChosen(e.target.files?.[0]);e.target.value=""});
 const zone=$("excelDrop");zone.addEventListener("click",()=>$("excelInput").click());zone.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();$("excelInput").click()}});zone.addEventListener("dragover",e=>{e.preventDefault();zone.classList.add("dragging")});zone.addEventListener("dragleave",()=>zone.classList.remove("dragging"));zone.addEventListener("drop",e=>{e.preventDefault();zone.classList.remove("dragging");fileChosen(e.dataTransfer.files?.[0])});
-$("importDebtSelect").addEventListener("change",renderDebtPreview);$("importConfirm").addEventListener("click",confirm);$("importBackup").addEventListener("click",backup);$("importPeriod").addEventListener("change",syncOffice);
+$("importDebtSelect").addEventListener("change",renderDebtPreview);$("importConfirm").addEventListener("click",confirm);$("importBackup").addEventListener("click",backup);$("importPeriod").addEventListener("change",syncOffice);$("importReportType").addEventListener("change",()=>{if(parsed){msg("Тип отчёта изменён. Проверьте предлагаемые показатели перед подтверждением.");$("importStatus").textContent=$("importReportType").value==="marketing"?"Маркетинговые показатели пока не сопоставлены с вашей формой: автоматическое заполнение маркетинговой аналитики не реализовано.":"Распознавание экспериментальное, проверьте правильность цифр.";}});
 $("importHistory").addEventListener("click",e=>{const btn=e.target.closest("[data-period]");if(btn){$("importPeriod").value=btn.dataset.period;syncOffice()}});
 window.dataEntryHasSaved=city=>Object.keys(store).some(k=>k.startsWith(city+"|"));
 window.dataEntryOfficeChanged=syncOffice;
